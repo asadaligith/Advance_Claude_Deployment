@@ -3,6 +3,9 @@
 from fastapi import FastAPI, Request
 
 from app.handlers.task_completed import handle_task_completed
+from app.logging_config import setup_logging
+
+setup_logging()
 
 app = FastAPI(
     title="Recurring Task Service",
