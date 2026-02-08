@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Text
+from sqlalchemy import DateTime, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Column, Field, SQLModel, String
 
@@ -28,12 +28,18 @@ class Task(SQLModel, table=True):
     user_id: uuid.UUID = Field(index=True)
     title: str = Field(max_length=500)
     description: str | None = Field(default=None, sa_column=Column(Text))
-    status: TaskStatus = Field(default=TaskStatus.PENDING)
+    status: TaskStatus = Field(
+        default=TaskStatus.PENDING,
+        sa_column=Column(String(20), nullable=False, default="pending", index=True),
+    )
     priority: TaskPriority = Field(
         default=TaskPriority.MEDIUM,
         sa_column=Column(String(10), nullable=False, default="medium", index=True),
     )
-    due_date: datetime | None = Field(default=None, index=True)
+    due_date: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True, index=True),
+    )
     is_recurring: bool = Field(default=False)
     recurrence_pattern: dict[str, Any] | None = Field(
         default=None, sa_column=Column(JSONB, nullable=True)
@@ -41,12 +47,16 @@ class Task(SQLModel, table=True):
     reminder_offset: str | None = Field(default=None, max_length=50)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
-        index=True,
+        sa_column=Column(DateTime(timezone=True), nullable=False, index=True),
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    completed_at: datetime | None = Field(default=None)
+    completed_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
 
 
 class TaskCreate(SQLModel):

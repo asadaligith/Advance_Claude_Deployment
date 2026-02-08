@@ -3,7 +3,8 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlmodel import Field, SQLModel, UniqueConstraint
+from sqlalchemy import DateTime
+from sqlmodel import Column, Field, SQLModel, UniqueConstraint
 
 
 class Tag(SQLModel, table=True):
@@ -14,7 +15,8 @@ class Tag(SQLModel, table=True):
     name: str = Field(max_length=100, nullable=False)
     user_id: uuid.UUID = Field(nullable=False, index=True)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
 
