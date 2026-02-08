@@ -26,7 +26,11 @@ class Settings(BaseSettings):
     def dapr_base_url(self) -> str:
         return f"http://localhost:{self.dapr_http_port}"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "extra": "ignore",
+    }
 
 
 def _fetch_dapr_secret(base_url: str, store: str, key: str) -> str | None:
