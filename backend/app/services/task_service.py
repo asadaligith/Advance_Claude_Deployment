@@ -7,11 +7,40 @@ import structlog
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.completion import CompletionRecord
 from app.models.tag import Tag, TaskTag
 from app.models.task import Task, TaskCreate, TaskPriority, TaskRead, TaskStatus, TaskUpdate
 from app.services.event_publisher import publish_task_event
 
 logger = structlog.get_logger()
+
+
+def _validate_recurrence_pattern(pattern: dict) -> None:
+    """Validate recurrence pattern JSONB per data-model.md rules.
+
+    Raises ValueError on invalid patterns.
+    """
+    rtype = pattern.get("type")
+    if rtype not in ("daily", "weekly", "monthly", "custom"):
+        raise ValueError(f"Invalid recurrence type: {rtype}")
+
+    if rtype == "weekly":
+        days = pattern.get("days_of_week")
+        if not days or not isinstance(days, list) or len(days) == 0:
+            raise ValueError("Weekly recurrence requires 'days_of_week' with at least one entry")
+        for d in days:
+            if not isinstance(d, int) or d < 0 or d > 6:
+                raise ValueError(f"Invalid day_of_week value: {d} (must be 0-6)")
+
+    elif rtype == "monthly":
+        day = pattern.get("day_of_month")
+        if day is None or not isinstance(day, int) or day < 1 or day > 31:
+            raise ValueError("Monthly recurrence requires 'day_of_month' (1-31)")
+
+    elif rtype == "custom":
+        interval = pattern.get("interval_days")
+        if not interval or not isinstance(interval, int) or interval < 1:
+            raise ValueError("Custom recurrence requires 'interval_days' >= 1")
 
 
 def _task_to_read(task: Task, tags: list[str] | None = None) -> TaskRead:
@@ -83,6 +112,12 @@ async def create_task(
     db: AsyncSession, user_id: uuid.UUID, data: TaskCreate
 ) -> TaskRead:
     """Create a new task and publish a 'created' event."""
+    # Validate recurrence pattern if recurring
+    if data.is_recurring:
+        if not data.recurrence_pattern:
+            raise ValueError("Recurring tasks require a recurrence_pattern")
+        _validate_recurrence_pattern(data.recurrence_pattern)
+
     task = Task(
         user_id=user_id,
         title=data.title,
@@ -253,6 +288,14 @@ async def complete_task(
     task.completed_at = now
     task.updated_at = now
 
+    # Create CompletionRecord for history tracking
+    record = CompletionRecord(
+        task_id=task_id,
+        completed_at=now,
+        completed_by=user_id,
+    )
+    db.add(record)
+
     await db.commit()
     await db.refresh(task)
 
@@ -328,3 +371,52 @@ async def delete_task(
     )
 
     return True
+
+
+async def get_dashboard_stats(db: AsyncSession, user_id: uuid.UUID) -> dict:
+    """Get dashboard statistics for the authenticated user."""
+    base = select(Task).where(Task.user_id == user_id)
+
+    total = (await db.execute(
+        select(func.count()).select_from(base.subquery())
+    )).scalar() or 0
+
+    pending = (await db.execute(
+        select(func.count()).select_from(
+            base.where(Task.status == TaskStatus.PENDING).subquery()
+        )
+    )).scalar() or 0
+
+    completed = (await db.execute(
+        select(func.count()).select_from(
+            base.where(Task.status == TaskStatus.COMPLETED).subquery()
+        )
+    )).scalar() or 0
+
+    now = datetime.now(timezone.utc)
+    overdue = (await db.execute(
+        select(func.count()).select_from(
+            base.where(
+                Task.status == TaskStatus.PENDING,
+                Task.due_date < now,
+                Task.due_date.isnot(None),
+            ).subquery()
+        )
+    )).scalar() or 0
+
+    high_priority = (await db.execute(
+        select(func.count()).select_from(
+            base.where(
+                Task.status == TaskStatus.PENDING,
+                Task.priority == TaskPriority.HIGH,
+            ).subquery()
+        )
+    )).scalar() or 0
+
+    return {
+        "total": total,
+        "pending": pending,
+        "completed": completed,
+        "overdue": overdue,
+        "high_priority": high_priority,
+    }

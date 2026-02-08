@@ -11,9 +11,13 @@ from app.services import tag_service
 router = APIRouter(prefix="/api/tags", tags=["tags"])
 
 
-@router.get("")
+@router.get(
+    "",
+    summary="List tags",
+    description="Retrieve all tags for the current user with task counts. Supports autocomplete filtering via the ?q= query parameter.",
+)
 async def list_tags(
-    q: str | None = Query(None),
+    q: str | None = Query(None, description="Optional prefix filter for autocomplete"),
     user_id: uuid.UUID = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):

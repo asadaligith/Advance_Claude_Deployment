@@ -29,7 +29,12 @@ class ChatResponse(BaseModel):
     actions_taken: list[ChatAction]
 
 
-@router.post("/{user_id}/chat", response_model=ChatResponse)
+@router.post(
+    "/{user_id}/chat",
+    response_model=ChatResponse,
+    summary="Send a chat message",
+    description="Process a natural-language message through the AI agent. The agent can create, update, complete, delete, and list tasks via MCP tools.",
+)
 async def chat(
     user_id: uuid.UUID,
     body: ChatRequest,

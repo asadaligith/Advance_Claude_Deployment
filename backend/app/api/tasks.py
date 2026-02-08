@@ -16,7 +16,13 @@ from app.services import task_service
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
 
-@router.post("", status_code=201, response_model=TaskRead)
+@router.post(
+    "",
+    status_code=201,
+    response_model=TaskRead,
+    summary="Create a task",
+    description="Create a new task with optional tags, recurrence pattern, and reminder offset.",
+)
 async def create_task(
     data: TaskCreate,
     user_id: uuid.UUID = Depends(get_current_user_id),
@@ -25,7 +31,11 @@ async def create_task(
     return await task_service.create_task(db, user_id, data)
 
 
-@router.get("")
+@router.get(
+    "",
+    summary="List tasks",
+    description="Retrieve paginated tasks with optional filters for status, priority, tags, due date range, full-text search, and sorting.",
+)
 async def list_tasks(
     q: str | None = Query(None),
     status: TaskStatus | None = Query(None),
@@ -56,7 +66,24 @@ async def list_tasks(
     )
 
 
-@router.get("/{task_id}", response_model=TaskRead)
+@router.get(
+    "/dashboard",
+    summary="Dashboard statistics",
+    description="Returns aggregate counts: total, pending, completed, overdue, and high-priority tasks.",
+)
+async def dashboard_stats(
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    return await task_service.get_dashboard_stats(db, user_id)
+
+
+@router.get(
+    "/{task_id}",
+    response_model=TaskRead,
+    summary="Get a task",
+    description="Retrieve a single task by ID. Returns 404 if not found or not owned by the user.",
+)
 async def get_task(
     task_id: int,
     user_id: uuid.UUID = Depends(get_current_user_id),
@@ -68,7 +95,12 @@ async def get_task(
     return task
 
 
-@router.patch("/{task_id}", response_model=TaskRead)
+@router.patch(
+    "/{task_id}",
+    response_model=TaskRead,
+    summary="Update a task",
+    description="Partially update a task. Only provided fields are changed. Publishes a task.updated event.",
+)
 async def update_task(
     task_id: int,
     data: TaskUpdate,
@@ -81,7 +113,12 @@ async def update_task(
     return task
 
 
-@router.post("/{task_id}/complete", response_model=TaskRead)
+@router.post(
+    "/{task_id}/complete",
+    response_model=TaskRead,
+    summary="Complete a task",
+    description="Mark a task as completed. Creates a CompletionRecord for recurring tasks. Returns 409 if already completed.",
+)
 async def complete_task(
     task_id: int,
     user_id: uuid.UUID = Depends(get_current_user_id),
@@ -97,7 +134,12 @@ async def complete_task(
     return result
 
 
-@router.post("/{task_id}/reopen", response_model=TaskRead)
+@router.post(
+    "/{task_id}/reopen",
+    response_model=TaskRead,
+    summary="Reopen a task",
+    description="Reopen a previously completed task. Returns 409 if the task is not in completed status.",
+)
 async def reopen_task(
     task_id: int,
     user_id: uuid.UUID = Depends(get_current_user_id),
@@ -112,7 +154,12 @@ async def reopen_task(
     return result
 
 
-@router.delete("/{task_id}", status_code=204)
+@router.delete(
+    "/{task_id}",
+    status_code=204,
+    summary="Delete a task",
+    description="Permanently delete a task and its associated tags, reminders, and completion records.",
+)
 async def delete_task(
     task_id: int,
     user_id: uuid.UUID = Depends(get_current_user_id),
@@ -123,7 +170,11 @@ async def delete_task(
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.get("/{task_id}/completions")
+@router.get(
+    "/{task_id}/completions",
+    summary="Get completion history",
+    description="Retrieve the completion history for a recurring task, ordered by most recent first.",
+)
 async def get_completions(
     task_id: int,
     user_id: uuid.UUID = Depends(get_current_user_id),

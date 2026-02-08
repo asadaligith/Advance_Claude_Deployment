@@ -13,6 +13,8 @@ export function TaskForm({ onSubmit, loading }: TaskFormProps) {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [tagsInput, setTagsInput] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [reminderOffset, setReminderOffset] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,12 +30,16 @@ export function TaskForm({ onSubmit, loading }: TaskFormProps) {
       description: description.trim() || null,
       priority,
       tags: tags.length > 0 ? tags : undefined,
+      due_date: dueDate ? new Date(dueDate).toISOString() : null,
+      reminder_offset: reminderOffset || null,
     });
 
     setTitle("");
     setDescription("");
     setPriority("medium");
     setTagsInput("");
+    setDueDate("");
+    setReminderOffset("");
   }
 
   return (
@@ -86,6 +92,39 @@ export function TaskForm({ onSubmit, loading }: TaskFormProps) {
             onChange={(e) => setTagsInput(e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
           />
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Due Date
+          </label>
+          <input
+            type="datetime-local"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+
+        <div className="flex-1">
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Reminder
+          </label>
+          <select
+            value={reminderOffset}
+            onChange={(e) => setReminderOffset(e.target.value)}
+            disabled={!dueDate}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+          >
+            <option value="">No reminder</option>
+            <option value="15m">15 minutes before</option>
+            <option value="30m">30 minutes before</option>
+            <option value="1h">1 hour before</option>
+            <option value="2h">2 hours before</option>
+            <option value="1d">1 day before</option>
+          </select>
         </div>
       </div>
 

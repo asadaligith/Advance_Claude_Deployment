@@ -108,6 +108,20 @@ export async function deleteTask(taskId: number): Promise<void> {
   return request<void>(`/api/tasks/${taskId}`, { method: "DELETE" });
 }
 
+// ── Dashboard ─────────────────────────────────────────
+
+export interface DashboardStats {
+  total: number;
+  pending: number;
+  completed: number;
+  overdue: number;
+  high_priority: number;
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  return request<DashboardStats>("/api/tasks/dashboard");
+}
+
 // ── Tags ───────────────────────────────────────────────
 
 export async function listTags(q?: string): Promise<{ tags: Tag[] }> {

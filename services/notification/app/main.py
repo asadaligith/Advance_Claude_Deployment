@@ -4,6 +4,9 @@ from fastapi import FastAPI, Request
 
 from app.handlers.job_trigger import handle_job_trigger
 from app.handlers.reminder_scheduled import handle_reminder_scheduled
+from app.logging_config import setup_logging
+
+setup_logging()
 
 app = FastAPI(
     title="Notification Service",

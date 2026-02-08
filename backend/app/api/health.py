@@ -11,12 +11,20 @@ from app.config import settings
 router = APIRouter(tags=["health"])
 
 
-@router.get("/healthz")
+@router.get(
+    "/healthz",
+    summary="Liveness probe",
+    description="Returns 200 if the service process is running. Used by Kubernetes liveness probes.",
+)
 async def liveness():
     return {"status": "ok"}
 
 
-@router.get("/readyz")
+@router.get(
+    "/readyz",
+    summary="Readiness probe",
+    description="Checks database connectivity and Dapr sidecar health. Returns 503 if any dependency is unavailable.",
+)
 async def readiness(db: AsyncSession = Depends(get_db)):
     checks: dict[str, str] = {}
 
