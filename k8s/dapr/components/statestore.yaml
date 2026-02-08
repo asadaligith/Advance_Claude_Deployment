@@ -6,14 +6,19 @@ metadata:
 spec:
   type: state.postgresql
   version: v1
+  initTimeout: 60s
   metadata:
     - name: connectionString
       secretKeyRef:
         name: todo-secrets
-        key: DATABASE_URL
+        key: DAPR_DATABASE_URL
     - name: tableName
       value: "dapr_state"
     - name: metadataTableName
       value: "dapr_metadata"
+    - name: timeout
+      value: "30"
 auth:
   secretStore: kubernetes-secrets
+scopes:
+  - backend
