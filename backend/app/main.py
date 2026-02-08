@@ -8,6 +8,7 @@ from app.api.chat import router as chat_router
 from app.api.health import router as health_router
 from app.api.tags import router as tags_router
 from app.api.tasks import router as tasks_router
+from app.config import settings
 from app.logging_config import generate_correlation_id, setup_logging
 
 # Initialize structured logging
@@ -17,25 +18,38 @@ logger = structlog.get_logger()
 app = FastAPI(
     title="Todo Chatbot API",
     version="0.1.0",
-    description="Event-driven todo chatbot backend with Dapr integration.\n\n"
-    "All infrastructure access goes through Dapr sidecars. "
-    "The backend publishes events to Kafka via Dapr Pub/Sub and "
-    "serves as the primary API for the frontend and AI chat agent.",
+    description=(
+        "Event-driven todo chatbot backend with Dapr "
+        "integration.\n\nAll infrastructure access goes "
+        "through Dapr sidecars. The backend publishes "
+        "events to Kafka via Dapr Pub/Sub and serves as "
+        "the primary API for the frontend and AI chat agent."
+    ),
     openapi_tags=[
-        {"name": "tasks", "description": "Task CRUD operations with priority, tags, and filtering"},
-        {"name": "tags", "description": "Tag management and autocomplete"},
-        {"name": "chat", "description": "AI-powered chat endpoint for natural language task management"},
-        {"name": "health", "description": "Liveness and readiness probes for Kubernetes"},
+        {
+            "name": "tasks",
+            "description": "Task CRUD with priority, tags, filtering",
+        },
+        {
+            "name": "tags",
+            "description": "Tag management and autocomplete",
+        },
+        {
+            "name": "chat",
+            "description": "AI chat for task management",
+        },
+        {
+            "name": "health",
+            "description": "Liveness and readiness probes",
+        },
     ],
 )
-
-from app.config import settings
 
 _allowed_origins = [
     "http://localhost:3000",
     "http://localhost:3001",
 ]
-if hasattr(settings, "cors_origins") and settings.cors_origins:
+if settings.cors_origins:
     _allowed_origins = settings.cors_origins
 
 app.add_middleware(

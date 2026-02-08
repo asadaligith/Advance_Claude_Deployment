@@ -14,7 +14,10 @@ router = APIRouter(prefix="/api/tags", tags=["tags"])
 @router.get(
     "",
     summary="List tags",
-    description="Retrieve all tags for the current user with task counts. Supports autocomplete filtering via the ?q= query parameter.",
+    description=(
+        "Retrieve all tags for the current user with task counts. "
+        "Supports autocomplete filtering via the ?q= parameter."
+    ),
 )
 async def list_tags(
     q: str | None = Query(None, description="Optional prefix filter for autocomplete"),

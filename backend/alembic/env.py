@@ -9,14 +9,12 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
 
 from app.config import settings
-
-# Import all models so SQLModel registers their metadata
-from app.models.user import User  # noqa: F401
-from app.models.task import Task  # noqa: F401
-from app.models.tag import Tag, TaskTag  # noqa: F401
-from app.models.reminder import Reminder  # noqa: F401
 from app.models.completion import CompletionRecord  # noqa: F401
 from app.models.conversation import Conversation, Message  # noqa: F401
+from app.models.reminder import Reminder  # noqa: F401
+from app.models.tag import Tag, TaskTag  # noqa: F401
+from app.models.task import Task  # noqa: F401
+from app.models.user import User  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

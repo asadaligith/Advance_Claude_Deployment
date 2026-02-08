@@ -4,12 +4,19 @@ import uuid
 from datetime import datetime, timezone
 
 import structlog
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.completion import CompletionRecord
 from app.models.tag import Tag, TaskTag
-from app.models.task import Task, TaskCreate, TaskPriority, TaskRead, TaskStatus, TaskUpdate
+from app.models.task import (
+    Task,
+    TaskCreate,
+    TaskPriority,
+    TaskRead,
+    TaskStatus,
+    TaskUpdate,
+)
 from app.services.event_publisher import publish_task_event
 
 logger = structlog.get_logger()
@@ -27,7 +34,9 @@ def _validate_recurrence_pattern(pattern: dict) -> None:
     if rtype == "weekly":
         days = pattern.get("days_of_week")
         if not days or not isinstance(days, list) or len(days) == 0:
-            raise ValueError("Weekly recurrence requires 'days_of_week' with at least one entry")
+            raise ValueError(
+                "Weekly recurrence requires 'days_of_week' with at least one entry"
+            )
         for d in days:
             if not isinstance(d, int) or d < 0 or d > 6:
                 raise ValueError(f"Invalid day_of_week value: {d} (must be 0-6)")
@@ -79,8 +88,10 @@ async def _sync_tags(
     """Create-or-get tags by name and associate them with the task."""
     # Remove existing associations
     existing = (
-        await db.execute(select(TaskTag).where(TaskTag.task_id == task_id))
-    ).scalars().all()
+        (await db.execute(select(TaskTag).where(TaskTag.task_id == task_id)))
+        .scalars()
+        .all()
+    )
     for tt in existing:
         await db.delete(tt)
 
@@ -199,9 +210,7 @@ async def list_tasks(
             )
             base = base.where(Task.id.in_(sub))
     if q:
-        base = base.where(
-            Task.title.ilike(f"%{q}%") | Task.description.ilike(f"%{q}%")
-        )
+        base = base.where(Task.title.ilike(f"%{q}%") | Task.description.ilike(f"%{q}%"))
 
     # Count total
     count_stmt = select(func.count()).select_from(base.subquery())
@@ -344,9 +353,7 @@ async def reopen_task(
     return read
 
 
-async def delete_task(
-    db: AsyncSession, user_id: uuid.UUID, task_id: int
-) -> bool:
+async def delete_task(db: AsyncSession, user_id: uuid.UUID, task_id: int) -> bool:
     """Delete a task and publish a 'deleted' event."""
     stmt = select(Task).where(Task.id == task_id, Task.user_id == user_id)
     task = (await db.execute(stmt)).scalar_one_or_none()
@@ -355,8 +362,10 @@ async def delete_task(
 
     # Remove tag associations first
     tag_links = (
-        await db.execute(select(TaskTag).where(TaskTag.task_id == task_id))
-    ).scalars().all()
+        (await db.execute(select(TaskTag).where(TaskTag.task_id == task_id)))
+        .scalars()
+        .all()
+    )
     for link in tag_links:
         await db.delete(link)
 
@@ -377,41 +386,49 @@ async def get_dashboard_stats(db: AsyncSession, user_id: uuid.UUID) -> dict:
     """Get dashboard statistics for the authenticated user."""
     base = select(Task).where(Task.user_id == user_id)
 
-    total = (await db.execute(
-        select(func.count()).select_from(base.subquery())
-    )).scalar() or 0
+    total = (
+        await db.execute(select(func.count()).select_from(base.subquery()))
+    ).scalar() or 0
 
-    pending = (await db.execute(
-        select(func.count()).select_from(
-            base.where(Task.status == TaskStatus.PENDING).subquery()
+    pending = (
+        await db.execute(
+            select(func.count()).select_from(
+                base.where(Task.status == TaskStatus.PENDING).subquery()
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
-    completed = (await db.execute(
-        select(func.count()).select_from(
-            base.where(Task.status == TaskStatus.COMPLETED).subquery()
+    completed = (
+        await db.execute(
+            select(func.count()).select_from(
+                base.where(Task.status == TaskStatus.COMPLETED).subquery()
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     now = datetime.now(timezone.utc)
-    overdue = (await db.execute(
-        select(func.count()).select_from(
-            base.where(
-                Task.status == TaskStatus.PENDING,
-                Task.due_date < now,
-                Task.due_date.isnot(None),
-            ).subquery()
+    overdue = (
+        await db.execute(
+            select(func.count()).select_from(
+                base.where(
+                    Task.status == TaskStatus.PENDING,
+                    Task.due_date < now,
+                    Task.due_date.isnot(None),
+                ).subquery()
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
-    high_priority = (await db.execute(
-        select(func.count()).select_from(
-            base.where(
-                Task.status == TaskStatus.PENDING,
-                Task.priority == TaskPriority.HIGH,
-            ).subquery()
+    high_priority = (
+        await db.execute(
+            select(func.count()).select_from(
+                base.where(
+                    Task.status == TaskStatus.PENDING,
+                    Task.priority == TaskPriority.HIGH,
+                ).subquery()
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     return {
         "total": total,

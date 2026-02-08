@@ -5,9 +5,9 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlmodel import Column, Field, SQLModel, String
 from sqlalchemy import Text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlmodel import Column, Field, SQLModel, String
 
 
 class TaskStatus(str, enum.Enum):

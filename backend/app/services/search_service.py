@@ -5,7 +5,6 @@ import uuid
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.tag import Tag, TaskTag
 from app.models.task import Task
 
 
@@ -26,11 +25,12 @@ async def search_tasks(
 
     if len(query.strip()) >= 2:
         # Use tsvector search with ranking
-        ts_query = func.plainto_tsquery("english", query)
         base = base.where(
             text("search_vector @@ plainto_tsquery('english', :q)").bindparams(q=query)
         ).order_by(
-            text("ts_rank(search_vector, plainto_tsquery('english', :q)) DESC").bindparams(q=query)
+            text(
+                "ts_rank(search_vector, plainto_tsquery('english', :q)) DESC"
+            ).bindparams(q=query)
         )
     else:
         # Fallback: simple ILIKE for very short queries
