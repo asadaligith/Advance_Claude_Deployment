@@ -33,7 +33,11 @@ class ChatResponse(BaseModel):
     "/{user_id}/chat",
     response_model=ChatResponse,
     summary="Send a chat message",
-    description="Process a natural-language message through the AI agent. The agent can create, update, complete, delete, and list tasks via MCP tools.",
+    description=(
+        "Process a natural-language message through the AI agent. "
+        "The agent can create, update, complete, delete, "
+        "and list tasks via MCP tools."
+    ),
 )
 async def chat(
     user_id: uuid.UUID,
@@ -85,7 +89,13 @@ async def chat(
         conv_id = conv.id
 
     # Save user message
-    db.add(Message(conversation_id=conv_id, role=MessageRole.USER, content=body.message))
+    db.add(
+        Message(
+            conversation_id=conv_id,
+            role=MessageRole.USER,
+            content=body.message,
+        )
+    )
 
     # Process through agent
     try:

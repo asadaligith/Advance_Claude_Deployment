@@ -4,12 +4,19 @@ import uuid
 from datetime import datetime, timezone
 
 import structlog
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.completion import CompletionRecord
 from app.models.tag import Tag, TaskTag
-from app.models.task import Task, TaskCreate, TaskPriority, TaskRead, TaskStatus, TaskUpdate
+from app.models.task import (
+    Task,
+    TaskCreate,
+    TaskPriority,
+    TaskRead,
+    TaskStatus,
+    TaskUpdate,
+)
 from app.services.event_publisher import publish_task_event
 
 logger = structlog.get_logger()
@@ -27,7 +34,10 @@ def _validate_recurrence_pattern(pattern: dict) -> None:
     if rtype == "weekly":
         days = pattern.get("days_of_week")
         if not days or not isinstance(days, list) or len(days) == 0:
-            raise ValueError("Weekly recurrence requires 'days_of_week' with at least one entry")
+            raise ValueError(
+                "Weekly recurrence requires 'days_of_week' "
+                "with at least one entry"
+            )
         for d in days:
             if not isinstance(d, int) or d < 0 or d > 6:
                 raise ValueError(f"Invalid day_of_week value: {d} (must be 0-6)")

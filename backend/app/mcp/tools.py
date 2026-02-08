@@ -166,7 +166,8 @@ async def list_tasks(
         page: Page number (1-based).
         page_size: Items per page (max 100).
     """
-    from app.models.task import TaskPriority as TP, TaskStatus as TS
+    from app.models.task import TaskPriority as TP
+    from app.models.task import TaskStatus as TS
 
     parsed_status = TS(status) if status else None
     parsed_priority = TP(priority) if priority else None

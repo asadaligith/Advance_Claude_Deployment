@@ -4,13 +4,19 @@ import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user_id, get_db
 from app.models.completion import CompletionRecord
-from app.models.task import Task, TaskCreate, TaskPriority, TaskRead, TaskStatus, TaskUpdate
+from app.models.task import (
+    Task,
+    TaskCreate,
+    TaskPriority,
+    TaskRead,
+    TaskStatus,
+    TaskUpdate,
+)
 from app.services import task_service
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
@@ -21,7 +27,10 @@ router = APIRouter(prefix="/api/tasks", tags=["tasks"])
     status_code=201,
     response_model=TaskRead,
     summary="Create a task",
-    description="Create a new task with optional tags, recurrence pattern, and reminder offset.",
+    description=(
+        "Create a new task with optional tags, "
+        "recurrence pattern, and reminder offset."
+    ),
 )
 async def create_task(
     data: TaskCreate,
@@ -34,7 +43,11 @@ async def create_task(
 @router.get(
     "",
     summary="List tasks",
-    description="Retrieve paginated tasks with optional filters for status, priority, tags, due date range, full-text search, and sorting.",
+    description=(
+        "Retrieve paginated tasks with optional filters "
+        "for status, priority, tags, due date range, "
+        "full-text search, and sorting."
+    ),
 )
 async def list_tasks(
     q: str | None = Query(None),
@@ -69,7 +82,10 @@ async def list_tasks(
 @router.get(
     "/dashboard",
     summary="Dashboard statistics",
-    description="Returns aggregate counts: total, pending, completed, overdue, and high-priority tasks.",
+    description=(
+        "Returns aggregate counts: total, pending, "
+        "completed, overdue, and high-priority tasks."
+    ),
 )
 async def dashboard_stats(
     user_id: uuid.UUID = Depends(get_current_user_id),
@@ -82,7 +98,10 @@ async def dashboard_stats(
     "/{task_id}",
     response_model=TaskRead,
     summary="Get a task",
-    description="Retrieve a single task by ID. Returns 404 if not found or not owned by the user.",
+    description=(
+        "Retrieve a single task by ID. "
+        "Returns 404 if not found or not owned by the user."
+    ),
 )
 async def get_task(
     task_id: int,
@@ -99,7 +118,10 @@ async def get_task(
     "/{task_id}",
     response_model=TaskRead,
     summary="Update a task",
-    description="Partially update a task. Only provided fields are changed. Publishes a task.updated event.",
+    description=(
+        "Partially update a task. Only provided fields "
+        "are changed. Publishes a task.updated event."
+    ),
 )
 async def update_task(
     task_id: int,
@@ -117,7 +139,10 @@ async def update_task(
     "/{task_id}/complete",
     response_model=TaskRead,
     summary="Complete a task",
-    description="Mark a task as completed. Creates a CompletionRecord for recurring tasks. Returns 409 if already completed.",
+    description=(
+        "Mark a task as completed. Creates a CompletionRecord "
+        "for recurring tasks. Returns 409 if already completed."
+    ),
 )
 async def complete_task(
     task_id: int,
@@ -138,7 +163,10 @@ async def complete_task(
     "/{task_id}/reopen",
     response_model=TaskRead,
     summary="Reopen a task",
-    description="Reopen a previously completed task. Returns 409 if the task is not in completed status.",
+    description=(
+        "Reopen a previously completed task. "
+        "Returns 409 if the task is not in completed status."
+    ),
 )
 async def reopen_task(
     task_id: int,
@@ -158,7 +186,10 @@ async def reopen_task(
     "/{task_id}",
     status_code=204,
     summary="Delete a task",
-    description="Permanently delete a task and its associated tags, reminders, and completion records.",
+    description=(
+        "Permanently delete a task and its associated "
+        "tags, reminders, and completion records."
+    ),
 )
 async def delete_task(
     task_id: int,
@@ -173,7 +204,10 @@ async def delete_task(
 @router.get(
     "/{task_id}/completions",
     summary="Get completion history",
-    description="Retrieve the completion history for a recurring task, ordered by most recent first.",
+    description=(
+        "Retrieve the completion history for a recurring "
+        "task, ordered by most recent first."
+    ),
 )
 async def get_completions(
     task_id: int,

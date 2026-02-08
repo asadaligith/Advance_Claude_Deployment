@@ -33,12 +33,18 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "add_task",
-            "description": "Create a new task with title, optional description, priority, tags, due date, and recurrence.",
+            "description": (
+                "Create a new task with title, description, "
+                "priority, tags, due date, and recurrence."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "title": {"type": "string", "description": "Task title"},
-                    "description": {"type": "string", "description": "Optional description"},
+                    "description": {
+                        "type": "string",
+                        "description": "Optional description",
+                    },
                     "priority": {
                         "type": "string",
                         "enum": ["high", "medium", "low"],
@@ -50,8 +56,14 @@ TOOL_DEFINITIONS = [
                         "description": "Optional tag names",
                     },
                     "due_date": {"type": "string", "description": "ISO 8601 due date"},
-                    "reminder_offset": {"type": "string", "description": "Reminder offset (e.g. 1h, 1d)"},
-                    "is_recurring": {"type": "boolean", "description": "Whether task recurs"},
+                    "reminder_offset": {
+                        "type": "string",
+                        "description": "Reminder offset (e.g. 1h, 1d)",
+                    },
+                    "is_recurring": {
+                        "type": "boolean",
+                        "description": "Whether task recurs",
+                    },
                     "recurrence_pattern": {
                         "type": "object",
                         "description": "Recurrence config (type, days_of_week, etc.)",
@@ -65,7 +77,10 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "update_task",
-            "description": "Update an existing task. Only include fields you want to change.",
+            "description": (
+                "Update an existing task. "
+                "Only include fields you want to change."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -91,7 +106,10 @@ TOOL_DEFINITIONS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "task_id": {"type": "integer", "description": "Task ID to complete"},
+                    "task_id": {
+                        "type": "integer",
+                        "description": "Task ID to complete",
+                    },
                 },
                 "required": ["task_id"],
             },
