@@ -26,13 +26,10 @@ async def search_tasks(
     if len(query.strip()) >= 2:
         # Use tsvector search with ranking
         base = base.where(
-            text(
-                "search_vector @@ plainto_tsquery('english', :q)"
-            ).bindparams(q=query)
+            text("search_vector @@ plainto_tsquery('english', :q)").bindparams(q=query)
         ).order_by(
             text(
-                "ts_rank(search_vector, "
-                "plainto_tsquery('english', :q)) DESC"
+                "ts_rank(search_vector, plainto_tsquery('english', :q)) DESC"
             ).bindparams(q=query)
         )
     else:

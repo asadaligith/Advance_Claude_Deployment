@@ -45,16 +45,10 @@ def upgrade() -> None:
         sa.Column("user_id", UUID(as_uuid=True), nullable=False),
         sa.Column("title", sa.String(500), nullable=False),
         sa.Column("description", sa.Text, nullable=True),
-        sa.Column(
-            "status", sa.String(20), nullable=False, server_default="pending"
-        ),
-        sa.Column(
-            "priority", sa.String(10), nullable=False, server_default="medium"
-        ),
+        sa.Column("status", sa.String(20), nullable=False, server_default="pending"),
+        sa.Column("priority", sa.String(10), nullable=False, server_default="medium"),
         sa.Column("due_date", sa.DateTime(timezone=True), nullable=True),
-        sa.Column(
-            "is_recurring", sa.Boolean, nullable=False, server_default="false"
-        ),
+        sa.Column("is_recurring", sa.Boolean, nullable=False, server_default="false"),
         sa.Column("recurrence_pattern", JSONB, nullable=True),
         sa.Column("reminder_offset", sa.String(50), nullable=True),
         sa.Column(
@@ -85,9 +79,7 @@ def upgrade() -> None:
         "setweight(to_tsvector('english', coalesce(description, '')), 'B')"
         ") STORED"
     )
-    op.execute(
-        "CREATE INDEX idx_task_search ON tasks USING GIN (search_vector)"
-    )
+    op.execute("CREATE INDEX idx_task_search ON tasks USING GIN (search_vector)")
 
     # --- Tags ---
     op.create_table(
@@ -135,9 +127,7 @@ def upgrade() -> None:
         ),
         sa.Column("user_id", UUID(as_uuid=True), nullable=False),
         sa.Column("remind_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column(
-            "status", sa.String(20), nullable=False, server_default="pending"
-        ),
+        sa.Column("status", sa.String(20), nullable=False, server_default="pending"),
         sa.Column("job_name", sa.String(255), nullable=False),
         sa.Column(
             "created_at",
@@ -171,9 +161,7 @@ def upgrade() -> None:
         ),
         sa.Column("completed_by", UUID(as_uuid=True), nullable=False),
     )
-    op.create_index(
-        "idx_completion_task_id", "completion_records", ["task_id"]
-    )
+    op.create_index("idx_completion_task_id", "completion_records", ["task_id"])
 
     # --- Conversations ---
     op.create_table(

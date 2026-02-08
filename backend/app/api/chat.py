@@ -74,12 +74,16 @@ async def chat(
             raise HTTPException(status_code=404, detail="Conversation not found")
 
         msgs = (
-            await db.execute(
-                select(Message)
-                .where(Message.conversation_id == conv_id)
-                .order_by(Message.created_at.asc())
+            (
+                await db.execute(
+                    select(Message)
+                    .where(Message.conversation_id == conv_id)
+                    .order_by(Message.created_at.asc())
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         history = [{"role": m.role.value, "content": m.content} for m in msgs]
     else:

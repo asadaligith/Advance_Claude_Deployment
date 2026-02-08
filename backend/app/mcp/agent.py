@@ -78,8 +78,7 @@ TOOL_DEFINITIONS = [
         "function": {
             "name": "update_task",
             "description": (
-                "Update an existing task. "
-                "Only include fields you want to change."
+                "Update an existing task. Only include fields you want to change."
             ),
             "parameters": {
                 "type": "object",
@@ -209,11 +208,13 @@ async def process_chat(
                 result = await execute_tool(tool_name, tool_args, db, user_id)
                 actions_taken.append({"tool": tool_name, "result": result})
 
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": json.dumps(result),
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result),
+                    }
+                )
         else:
             # Final text response
             return {

@@ -28,8 +28,7 @@ router = APIRouter(prefix="/api/tasks", tags=["tasks"])
     response_model=TaskRead,
     summary="Create a task",
     description=(
-        "Create a new task with optional tags, "
-        "recurrence pattern, and reminder offset."
+        "Create a new task with optional tags, recurrence pattern, and reminder offset."
     ),
 )
 async def create_task(
@@ -225,12 +224,16 @@ async def get_completions(
         raise HTTPException(status_code=404, detail="Task not found")
 
     records = (
-        await db.execute(
-            select(CompletionRecord)
-            .where(CompletionRecord.task_id == task_id)
-            .order_by(CompletionRecord.completed_at.desc())
+        (
+            await db.execute(
+                select(CompletionRecord)
+                .where(CompletionRecord.task_id == task_id)
+                .order_by(CompletionRecord.completed_at.desc())
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return {
         "completions": [
