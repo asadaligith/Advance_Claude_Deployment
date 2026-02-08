@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: recurring-task-service
+  repository: todo-recurring-task
   tag: latest
   pullPolicy: IfNotPresent
 

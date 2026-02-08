@@ -1,7 +1,8 @@
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: task-events
+  namespace: kafka
   labels:
     strimzi.io/cluster: todo-kafka
 spec:
@@ -11,10 +12,11 @@ spec:
     retention.ms: 604800000  # 7 days
     cleanup.policy: delete
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: reminders
+  namespace: kafka
   labels:
     strimzi.io/cluster: todo-kafka
 spec:
@@ -24,10 +26,11 @@ spec:
     retention.ms: 604800000
     cleanup.policy: delete
 ---
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: task-updates
+  namespace: kafka
   labels:
     strimzi.io/cluster: todo-kafka
 spec:

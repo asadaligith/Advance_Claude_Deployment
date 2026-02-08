@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: notification-service
+  repository: todo-notification
   tag: latest
   pullPolicy: IfNotPresent
 

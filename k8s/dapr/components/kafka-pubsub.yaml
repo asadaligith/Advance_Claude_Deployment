@@ -8,7 +8,7 @@ spec:
   version: v1
   metadata:
     - name: brokers
-      value: "todo-kafka-kafka-bootstrap:9092"
+      value: "todo-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
     - name: consumerGroup
       value: "todo-group"
     - name: authType
