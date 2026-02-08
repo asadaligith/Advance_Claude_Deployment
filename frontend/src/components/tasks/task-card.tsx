@@ -1,6 +1,8 @@
 "use client";
 
-import type { Task } from "@/lib/types";
+import { useState } from "react";
+import type { Task, CompletionRecord } from "@/lib/types";
+import { getCompletions } from "@/lib/api-client";
 import { PriorityBadge } from "./priority-badge";
 
 interface TaskCardProps {
@@ -14,6 +16,26 @@ export function TaskCard({ task, onComplete, onReopen, onDelete }: TaskCardProps
   const isCompleted = task.status === "completed";
   const isOverdue =
     !isCompleted && task.due_date && new Date(task.due_date) < new Date();
+  const [showHistory, setShowHistory] = useState(false);
+  const [completions, setCompletions] = useState<CompletionRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  async function toggleHistory() {
+    if (showHistory) {
+      setShowHistory(false);
+      return;
+    }
+    setHistoryLoading(true);
+    try {
+      const data = await getCompletions(task.id);
+      setCompletions(data.completions);
+    } catch {
+      setCompletions([]);
+    } finally {
+      setHistoryLoading(false);
+      setShowHistory(true);
+    }
+  }
 
   return (
     <div
@@ -67,7 +89,34 @@ export function TaskCard({ task, onComplete, onReopen, onDelete }: TaskCardProps
             <span>
               Created: {new Date(task.created_at).toLocaleDateString()}
             </span>
+            {task.is_recurring && (
+              <button
+                onClick={toggleHistory}
+                className="text-blue-500 hover:text-blue-700 hover:underline"
+              >
+                {showHistory ? "Hide history" : "Show history"}
+              </button>
+            )}
           </div>
+
+          {showHistory && (
+            <div className="mt-2 rounded border border-gray-200 bg-gray-50 p-2">
+              <p className="text-xs font-medium text-gray-600 mb-1">Completion History</p>
+              {historyLoading ? (
+                <p className="text-xs text-gray-400">Loading...</p>
+              ) : completions.length === 0 ? (
+                <p className="text-xs text-gray-400">No completions yet.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {completions.map((c) => (
+                    <li key={c.id} className="text-xs text-gray-500">
+                      Completed {new Date(c.completed_at).toLocaleString()}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="ml-3 flex gap-1">
