@@ -34,9 +34,7 @@ export default function HomePage() {
   useEffect(() => {
     const existing = getUserId();
     if (existing) {
-      router.replace("/");
-      // If already authenticated, redirect to dashboard
-      router.replace("/dashboard");
+      router.replace("/tasks");
     }
   }, [router]);
 
@@ -52,7 +50,7 @@ export default function HomePage() {
     }
 
     setUserId(trimmed);
-    router.push("/dashboard");
+    router.push("/tasks");
   }
 
   function handleGenerateUUID() {
