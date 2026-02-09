@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { listTags } from "@/lib/api-client";
 import type { Tag } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
 interface TagInputProps {
   value: string[];
@@ -60,21 +62,18 @@ export function TagInput({ value, onChange }: TagInputProps) {
 
   return (
     <div className="relative">
-      <div className="flex flex-wrap items-center gap-1 rounded-md border border-gray-300 px-2 py-1.5">
+      <div className="flex min-h-9 flex-wrap items-center gap-1 rounded-md border border-input bg-transparent px-3 py-1.5 shadow-sm transition-colors focus-within:ring-1 focus-within:ring-ring">
         {value.map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-0.5 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700"
-          >
+          <Badge key={tag} variant="secondary" className="gap-1 text-xs">
             {tag}
             <button
               type="button"
               onClick={() => removeTag(tag)}
-              className="text-blue-500 hover:text-blue-700"
+              className="ml-0.5 hover:text-destructive"
             >
-              &times;
+              <X className="h-2.5 w-2.5" />
             </button>
-          </span>
+          </Badge>
         ))}
         <input
           type="text"
@@ -87,23 +86,21 @@ export function TagInput({ value, onChange }: TagInputProps) {
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           placeholder={value.length === 0 ? "Add tags..." : ""}
-          className="flex-1 border-none text-sm outline-none min-w-[80px]"
+          className="flex-1 border-none bg-transparent text-sm outline-none min-w-[80px] placeholder:text-muted-foreground"
         />
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
-        <ul className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg">
+        <ul className="absolute z-10 mt-1 w-full rounded-md border border-border bg-popover p-1 shadow-lg">
           {suggestions.map((tag) => (
             <li key={tag.id}>
               <button
                 type="button"
-                className="flex w-full items-center justify-between px-3 py-1.5 text-sm hover:bg-gray-50"
+                className="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
                 onMouseDown={() => addTag(tag.name)}
               >
                 <span>{tag.name}</span>
-                <span className="text-xs text-gray-400">
-                  {tag.task_count} tasks
-                </span>
+                <span className="text-xs text-muted-foreground">{tag.task_count} tasks</span>
               </button>
             </li>
           ))}

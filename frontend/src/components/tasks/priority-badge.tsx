@@ -1,25 +1,29 @@
 "use client";
 
 import type { TaskPriority } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-const PRIORITY_STYLES: Record<TaskPriority, string> = {
-  high: "bg-red-100 text-red-700",
-  medium: "bg-yellow-100 text-yellow-700",
-  low: "bg-green-100 text-green-700",
-};
-
-const PRIORITY_LABELS: Record<TaskPriority, string> = {
-  high: "High",
-  medium: "Medium",
-  low: "Low",
+const PRIORITY_CONFIG: Record<TaskPriority, { label: string; className: string }> = {
+  high: {
+    label: "High",
+    className: "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400",
+  },
+  medium: {
+    label: "Medium",
+    className: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400",
+  },
+  low: {
+    label: "Low",
+    className: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400",
+  },
 };
 
 export function PriorityBadge({ priority }: { priority: TaskPriority }) {
+  const config = PRIORITY_CONFIG[priority];
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${PRIORITY_STYLES[priority]}`}
-    >
-      {PRIORITY_LABELS[priority]}
-    </span>
+    <Badge variant="outline" className={cn("text-[10px] font-medium", config.className)}>
+      {config.label}
+    </Badge>
   );
 }

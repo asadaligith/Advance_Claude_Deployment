@@ -3,6 +3,10 @@
 import { useRef, useState } from "react";
 import { sendChatMessage } from "@/lib/api-client";
 import { MessageList } from "./message-list";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Send, Loader2, RotateCcw } from "lucide-react";
 import type { ChatMessage } from "@/lib/types";
 
 export function ChatPanel() {
@@ -31,7 +35,7 @@ export function ChatPanel() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, something went wrong." },
+        { role: "assistant", content: "Sorry, something went wrong. Please try again." },
       ]);
     } finally {
       setLoading(false);
@@ -46,13 +50,38 @@ export function ChatPanel() {
     }
   }
 
+  function handleNewConversation() {
+    setMessages([]);
+    setConversationId(null);
+    inputRef.current?.focus();
+  }
+
   return (
     <div className="flex h-full flex-col">
+      {/* Header */}
+      {messages.length > 0 && (
+        <>
+          <div className="flex items-center justify-between px-4 py-2">
+            <span className="text-xs text-muted-foreground">
+              {conversationId ? `Session: ${conversationId.slice(0, 8)}...` : "New conversation"}
+            </span>
+            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={handleNewConversation}>
+              <RotateCcw className="h-3 w-3" />
+              New
+            </Button>
+          </div>
+          <Separator />
+        </>
+      )}
+
+      {/* Messages */}
       <MessageList messages={messages} />
 
-      <div className="border-t border-gray-200 p-4">
+      {/* Input */}
+      <Separator />
+      <div className="p-4">
         <div className="flex gap-2">
-          <input
+          <Input
             ref={inputRef}
             type="text"
             value={input}
@@ -60,15 +89,18 @@ export function ChatPanel() {
             onKeyDown={handleKeyDown}
             placeholder="Ask me to manage your tasks..."
             disabled={loading}
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
           />
-          <button
+          <Button
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            size="icon"
           >
-            {loading ? "..." : "Send"}
-          </button>
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
     </div>
