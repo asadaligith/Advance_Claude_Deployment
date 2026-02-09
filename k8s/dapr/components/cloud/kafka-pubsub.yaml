@@ -1,0 +1,34 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+  namespace: default
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    - name: brokers
+      # For cloud Strimzi: use the cloud Kafka bootstrap address
+      # For Redpanda Cloud: use the Redpanda bootstrap server
+      value: "REPLACE_WITH_CLOUD_KAFKA_BROKER:9092"
+    - name: consumerGroup
+      value: "todo-group"
+    - name: authType
+      # Use "password" for SASL/SCRAM, "mtls" for mTLS, "none" for internal clusters
+      value: "password"
+    - name: saslUsername
+      secretKeyRef:
+        name: kafka-secrets
+        key: KAFKA_USERNAME
+    - name: saslPassword
+      secretKeyRef:
+        name: kafka-secrets
+        key: KAFKA_PASSWORD
+    - name: saslMechanism
+      value: "SCRAM-SHA-256"
+    - name: maxMessageBytes
+      value: "1048576"
+    - name: requiredAcks
+      value: "all"
+auth:
+  secretStore: kubernetes-secrets
