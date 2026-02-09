@@ -7,9 +7,18 @@ image:
 
 service:
   port: 3000
+  type: ClusterIP
 
 env:
   NEXT_PUBLIC_BACKEND_URL: "http://backend-backend:8000"
+
+ingress:
+  enabled: true
+  className: nginx
+  host: todo.example.com
+  tls:
+    enabled: false
+    secretName: todo-frontend-tls
 
 resources:
   limits:

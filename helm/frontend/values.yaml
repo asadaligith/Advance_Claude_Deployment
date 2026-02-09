@@ -7,6 +7,10 @@ image:
 
 service:
   port: 3000
+  type: NodePort
+
+ingress:
+  enabled: false
 
 env:
   NEXT_PUBLIC_BACKEND_URL: "http://todo-backend:8000"
