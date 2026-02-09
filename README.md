@@ -49,7 +49,7 @@ An AI-powered task management system built with a distributed, event-driven micr
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS 4 |
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, Lucide Icons |
 | Backend API | Python 3.12, FastAPI, SQLModel, Async SQLAlchemy |
 | AI Agent | OpenAI Agents SDK, MCP Tools |
 | Database | Neon PostgreSQL (async via asyncpg) |
@@ -59,6 +59,16 @@ An AI-powered task management system built with a distributed, event-driven micr
 | Orchestration | Kubernetes, Helm Charts |
 | CI/CD | GitHub Actions |
 | Logging | structlog (JSON) with correlation IDs |
+
+## Features
+
+- **Task Dashboard** — Create, filter, sort, search, and manage tasks with priorities (high/medium/low), tags, and due dates
+- **AI Chat Interface** — Natural language task management powered by OpenAI Agents SDK with MCP tools
+- **Recurring Tasks** — Automatic next-occurrence creation on completion (daily, weekly, monthly, yearly)
+- **Reminders & Notifications** — Due-date reminders via event-driven notification service
+- **Calendar View** — Monthly calendar with task due dates and priority indicators
+- **Full-Text Search** — Search tasks by title, description, or tags
+- **UUID-Based Auth** — Simple `Authorization: Bearer <UUID>` authentication (UUID = user_id)
 
 ## Project Structure
 
@@ -79,14 +89,19 @@ phase5/
 │   ├── Dockerfile
 │   └── requirements.txt
 │
-├── frontend/                   # Next.js Frontend
+├── frontend/                   # Next.js Frontend (pnpm)
 │   ├── src/
 │   │   ├── app/                # App Router pages
-│   │   │   └── (dashboard)/    # Dashboard, chat, calendar pages
-│   │   ├── components/         # React components
-│   │   │   ├── tasks/          # TaskCard, TaskList, TaskForm, etc.
+│   │   │   ├── page.tsx        # Auth landing page (UUID input)
+│   │   │   └── (dashboard)/    # Dashboard layout with sidebar
+│   │   │       ├── tasks/      # Task dashboard page
+│   │   │       ├── chat/       # AI chat page
+│   │   │       └── calendar/   # Calendar view page
+│   │   ├── components/
+│   │   │   ├── ui/             # shadcn/ui components (Button, Card, Input, Badge, etc.)
+│   │   │   ├── tasks/          # TaskCard, TaskList, TaskForm, SearchBar, FilterPanel
 │   │   │   └── chat/           # ChatPanel, MessageList
-│   │   └── lib/                # API client, types, auth
+│   │   └── lib/                # API client, types, auth, utils
 │   ├── public/
 │   ├── Dockerfile
 │   └── package.json
@@ -116,11 +131,13 @@ phase5/
 │
 ├── k8s/                        # Kubernetes Manifests
 │   ├── kafka/                  # Strimzi Kafka cluster + topics
-│   └── dapr/components/        # Dapr Pub/Sub, State Store, Secrets
+│   └── dapr/components/
+│       ├── *.yaml              # Local/Minikube Dapr components
+│       └── cloud/              # Cloud-specific Dapr components (SASL Kafka)
 │
 ├── .github/workflows/          # CI/CD Pipelines
-│   ├── ci.yml                  # Lint, test, build
-│   └── deploy.yml              # Push images, helm deploy
+│   ├── ci.yml                  # Lint, test, Docker build, Helm lint
+│   └── deploy.yml              # Push images, Helm deploy
 │
 ├── .env.example                # Environment variable template
 └── README.md                   # This file
@@ -134,6 +151,7 @@ Install the following tools before starting:
 |------|---------|---------|---------|
 | **Python** | 3.12+ | Backend services | [python.org](https://www.python.org/downloads/) |
 | **Node.js** | 22+ | Frontend | [nodejs.org](https://nodejs.org/) |
+| **pnpm** | 10+ | Frontend package manager | `npm install -g pnpm` |
 | **Docker** | 24+ | Containerization | [docker.com](https://docs.docker.com/get-docker/) |
 | **Dapr CLI** | 1.14+ | Sidecar runtime | [dapr.io](https://docs.dapr.io/getting-started/install-dapr-cli/) |
 | **kubectl** | 1.28+ | Kubernetes CLI | [kubernetes.io](https://kubernetes.io/docs/tasks/tools/) |
@@ -146,6 +164,7 @@ Install the following tools before starting:
 ```bash
 python --version        # Python 3.12+
 node --version          # v22+
+pnpm --version          # 10+
 docker --version        # Docker 24+
 dapr --version          # CLI version 1.14+
 kubectl version --client
@@ -172,8 +191,11 @@ cp .env.example .env
 Edit `.env` with your actual values:
 
 ```env
-# Database — Neon PostgreSQL connection string
+# Database — Neon PostgreSQL connection string (async driver for app)
 DATABASE_URL=postgresql+asyncpg://user:password@your-neon-host.neon.tech/dbname?sslmode=require
+
+# Dapr state store — standard PostgreSQL URL (no +asyncpg, use sslmode=require)
+DAPR_DATABASE_URL=postgresql://user:password@your-neon-host.neon.tech/dbname?sslmode=require
 
 # Dapr sidecar port (default 3500)
 DAPR_HTTP_PORT=3500
@@ -191,6 +213,8 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 # Inter-service communication
 BACKEND_API_URL=http://localhost:8000
 ```
+
+> **Important**: `DATABASE_URL` uses `postgresql+asyncpg://` for the app's async driver. `DAPR_DATABASE_URL` uses standard `postgresql://` with `sslmode=require` for Dapr's pgx driver. Both point to the same Neon database.
 
 ### Step 3: Set up Neon PostgreSQL
 
@@ -234,13 +258,15 @@ The API will be available at `http://localhost:8000` with interactive docs at `h
 cd frontend
 
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server
-npm run dev
+pnpm dev
 ```
 
 The frontend will be available at `http://localhost:3000`.
+
+**Authentication**: Open the browser, enter any UUID (or click "Generate UUID") on the landing page. This UUID becomes your user identity — all tasks are scoped to it via `Authorization: Bearer <UUID>` headers.
 
 ### Recurring Task Service
 
@@ -326,13 +352,13 @@ ruff format .
 cd frontend
 
 # Type checking
-npx tsc --noEmit
+pnpm exec tsc --noEmit
 
 # ESLint
-npx next lint
+pnpm exec next lint
 
 # Run all checks
-npm run lint
+pnpm lint
 ```
 
 ### Helm Chart Validation
@@ -427,12 +453,14 @@ kubectl apply -f https://strimzi.io/install/latest?namespace=kafka -n kafka
 # Wait for Strimzi operator to be ready
 kubectl wait --for=condition=ready pod -l name=strimzi-cluster-operator -n kafka --timeout=300s
 
-# Deploy Kafka cluster and topics
+# Deploy Kafka cluster
 kubectl apply -f k8s/kafka/kafka-cluster.yaml -n kafka
-kubectl apply -f k8s/kafka/kafka-topics.yaml -n kafka
 
 # Wait for Kafka to be ready (takes 2-5 minutes)
 kubectl wait kafka/todo-kafka --for=condition=Ready -n kafka --timeout=600s
+
+# Deploy Kafka topics (after cluster is ready)
+kubectl apply -f k8s/kafka/kafka-topics.yaml -n kafka
 
 # Verify
 kubectl get kafka -n kafka
@@ -444,13 +472,16 @@ kubectl get kafkatopics -n kafka
 ```bash
 # Create the secret with your actual values
 kubectl create secret generic todo-secrets \
-  --from-literal=DATABASE_URL="postgresql+asyncpg://user:pass@host/db?sslmode=require" \
+  --from-literal=DATABASE_URL="postgresql+asyncpg://user:pass@host.neon.tech/db?sslmode=require" \
+  --from-literal=DAPR_DATABASE_URL="postgresql://user:pass@host.neon.tech/db?sslmode=require" \
   --from-literal=OPENAI_API_KEY="sk-your-key" \
   --from-literal=BETTER_AUTH_SECRET="your-secret"
 
 # Verify
 kubectl get secret todo-secrets
 ```
+
+> **Note**: `DAPR_DATABASE_URL` uses standard `postgresql://` (not `+asyncpg`) — Dapr's pgx driver requires this format.
 
 ### Step 5: Deploy Dapr Components
 
@@ -464,22 +495,23 @@ kubectl apply -f k8s/dapr/components/secrets.yaml
 kubectl get components.dapr.io
 ```
 
-### Step 6: Load Docker images into Minikube
+### Step 6: Build and load Docker images into Minikube
 
 ```bash
-# Point Docker CLI to Minikube's Docker daemon
-eval $(minikube docker-env)        # macOS/Linux
-# Windows PowerShell:
-# & minikube -p minikube docker-env --shell powershell | Invoke-Expression
-
-# Build images inside Minikube
+# Build Docker images locally
 docker build -t todo-backend:latest ./backend
 docker build -t todo-frontend:latest ./frontend
 docker build -t todo-recurring-task:latest ./services/recurring-task
 docker build -t todo-notification:latest ./services/notification
 
+# Load images into Minikube (works on all platforms including Windows)
+minikube image load todo-backend:latest
+minikube image load todo-frontend:latest
+minikube image load todo-recurring-task:latest
+minikube image load todo-notification:latest
+
 # Verify images are in Minikube
-docker images | grep todo
+minikube image ls | grep todo
 ```
 
 ### Step 7: Deploy services via Helm
@@ -532,7 +564,12 @@ Open `http://localhost:3000` in your browser.
 
 ### Step 10: End-to-end verification
 
+All API calls use `Authorization: Bearer <UUID>` where the UUID is the user identity:
+
 ```bash
+# Set your test user UUID
+export USER_ID="550e8400-e29b-41d4-a716-446655440000"
+
 # 1. Test backend health
 curl http://localhost:8000/healthz
 # Expected: {"status": "healthy"}
@@ -543,33 +580,43 @@ curl http://localhost:8000/readyz
 # 2. Create a task via API
 curl -X POST http://localhost:8000/api/tasks \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $USER_ID" \
   -d '{
     "title": "Test recurring task",
     "priority": "high",
     "is_recurring": true,
     "recurrence_pattern": {"type": "daily"},
-    "due_date": "2026-02-09T10:00:00Z",
-    "reminder_offset": "1h",
-    "user_id": "00000000-0000-0000-0000-000000000001"
+    "due_date": "2026-02-10T10:00:00Z",
+    "reminder_offset": "1h"
   }'
 
 # 3. List tasks
-curl "http://localhost:8000/api/tasks?user_id=00000000-0000-0000-0000-000000000001"
+curl -H "Authorization: Bearer $USER_ID" \
+  http://localhost:8000/api/tasks
 
 # 4. Check dashboard stats
-curl "http://localhost:8000/api/tasks/dashboard?user_id=00000000-0000-0000-0000-000000000001"
+curl -H "Authorization: Bearer $USER_ID" \
+  http://localhost:8000/api/tasks/dashboard
 
 # 5. Complete the task (triggers event to recurring-task service)
-curl -X POST http://localhost:8000/api/tasks/1/complete?user_id=00000000-0000-0000-0000-000000000001
+curl -X POST -H "Authorization: Bearer $USER_ID" \
+  http://localhost:8000/api/tasks/1/complete
 
 # 6. Verify next occurrence was auto-created by recurring-task service
-curl "http://localhost:8000/api/tasks?user_id=00000000-0000-0000-0000-000000000001"
+curl -H "Authorization: Bearer $USER_ID" \
+  http://localhost:8000/api/tasks
 
-# 7. Check recurring-task service logs for event processing
-kubectl logs <recurring-task-pod-name> recurring-task-service
+# 7. Chat with AI agent
+curl -X POST http://localhost:8000/api/$USER_ID/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $USER_ID" \
+  -d '{"message": "Add a daily task to exercise at 7am with a 15 minute reminder"}'
 
-# 8. Check notification service logs for reminder scheduling
-kubectl logs <notification-pod-name> notification-service
+# 8. Check recurring-task service logs for event processing
+kubectl logs -l app=recurring-task-service -c recurring-task-service
+
+# 9. Check notification service logs for reminder scheduling
+kubectl logs -l app=notification-service -c notification-service
 ```
 
 ---
@@ -586,12 +633,17 @@ docker tag todo-backend:latest your-registry/todo-backend:latest
 docker push your-registry/todo-backend:latest
 # Repeat for all 4 services
 
+# Apply cloud-specific Dapr components (SASL Kafka auth, cloud secrets)
+kubectl apply -f k8s/dapr/components/cloud/
+
 # Deploy with cloud values
 helm install backend ./helm/backend -f helm/backend/values-cloud.yaml
 helm install frontend ./helm/frontend -f helm/frontend/values-cloud.yaml
 helm install recurring-task-service ./helm/recurring-task-service -f helm/recurring-task-service/values-cloud.yaml
 helm install notification-service ./helm/notification-service -f helm/notification-service/values-cloud.yaml
 ```
+
+> See `k8s/dapr/components/cloud/README.md` for cloud Kafka and secrets configuration details.
 
 ### Option B: CI/CD via GitHub Actions
 
@@ -612,6 +664,8 @@ Then push to `main` branch -- the CI/CD pipeline will:
 ---
 
 ## API Endpoints
+
+All endpoints (except health) require the `Authorization: Bearer <UUID>` header, where the UUID is the user identity.
 
 ### Tasks
 
