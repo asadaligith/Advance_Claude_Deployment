@@ -48,3 +48,4 @@ htmlcov/
 kubeconfig*
 *.key
 *.crt
+frontend/tsconfig.tsbuildinfo
