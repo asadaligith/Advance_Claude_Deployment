@@ -85,7 +85,7 @@ async def chat(
             .all()
         )
 
-        history = [{"role": m.role.value, "content": m.content} for m in msgs]
+        history = [{"role": m.role if isinstance(m.role, str) else m.role.value, "content": m.content} for m in msgs]
     else:
         conv = Conversation(user_id=user_id)
         db.add(conv)
