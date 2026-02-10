@@ -58,7 +58,7 @@ TOOL_DEFINITIONS = [
                     "due_date": {"type": "string", "description": "ISO 8601 due date"},
                     "reminder_offset": {
                         "type": "string",
-                        "description": "Reminder offset (e.g. 1h, 1d)",
+                        "description": "Reminder offset before due date (e.g. 5m, 15m, 30m, 1h, 2h, 1d). Supports 1-60 minutes, hours, or days.",
                     },
                     "is_recurring": {
                         "type": "boolean",
@@ -179,6 +179,15 @@ async def process_chat(
     conversation_history: list[dict] | None = None,
 ) -> dict:
     """Process a chat message through the OpenAI-compatible agent."""
+    if not settings.openai_api_key or settings.openai_api_key.startswith("sk-your"):
+        return {
+            "response": (
+                "OpenAI API key is not configured. "
+                "Please set OPENAI_API_KEY in your .env file to enable AI chat."
+            ),
+            "actions_taken": [],
+        }
+
     client = AsyncOpenAI(api_key=settings.openai_api_key)
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]

@@ -153,10 +153,15 @@ export function TaskForm({ onSubmit, loading }: TaskFormProps) {
                     disabled={!dueDate}
                   >
                     <option value="">No reminder</option>
-                    <option value="15m">15 min before</option>
-                    <option value="30m">30 min before</option>
-                    <option value="1h">1 hour before</option>
+                    {Array.from({ length: 60 }, (_, i) => i + 1).map((m) => (
+                      <option key={`${m}m`} value={`${m}m`}>
+                        {m} min before
+                      </option>
+                    ))}
                     <option value="2h">2 hours before</option>
+                    <option value="3h">3 hours before</option>
+                    <option value="6h">6 hours before</option>
+                    <option value="12h">12 hours before</option>
                     <option value="1d">1 day before</option>
                   </Select>
                 </div>

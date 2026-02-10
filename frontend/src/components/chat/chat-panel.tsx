@@ -32,10 +32,19 @@ export function ChatPanel() {
         ...prev,
         { role: "assistant", content: result.response },
       ]);
-    } catch {
+    } catch (err: unknown) {
+      let errorMsg = "Sorry, something went wrong. Please try again.";
+      if (err instanceof Error) {
+        try {
+          const parsed = JSON.parse(err.message);
+          errorMsg = parsed.detail || err.message;
+        } catch {
+          errorMsg = err.message;
+        }
+      }
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, something went wrong. Please try again." },
+        { role: "assistant", content: errorMsg },
       ]);
     } finally {
       setLoading(false);
