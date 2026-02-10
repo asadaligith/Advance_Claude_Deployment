@@ -4,7 +4,7 @@ import enum
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, String
 from sqlmodel import Column, Field, SQLModel, Text
 
 
@@ -37,7 +37,9 @@ class Message(SQLModel, table=True):
     conversation_id: uuid.UUID = Field(
         foreign_key="conversations.id", nullable=False, index=True
     )
-    role: MessageRole = Field(nullable=False)
+    role: MessageRole = Field(
+        sa_column=Column(String(20), nullable=False),
+    )
     content: str = Field(sa_column=Column(Text, nullable=False))
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
